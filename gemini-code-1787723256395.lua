@@ -1,10 +1,10 @@
 -- ======================================================
--- FULL KAITUN AUTO QUEST & AUTO ISLAND SWITCHING
+-- FULL KAITUN BLOX FRUITS (AUTO PIRATE & FIXED COORDS)
 -- ======================================================
 
 _G = _G or {}
 _G.SelectWeapon = "Melee" 
-_G.MobHeight = 30         
+_G.MobHeight = 15         -- Giảm khoảng cách đứng trên đầu mob để tránh va vướng công trình
 _G.BringRange = 250       
 _G.MaxBringMobs = 15
 _G.FruitSkills = { Z = true, X = true, C = true, V = true, F = false }
@@ -19,7 +19,15 @@ local VirtualInputManager = game:GetService("VirtualInputManager")
 
 local plr = Players.LocalPlayer
 
--- 1. BYPASS & CHỐNG AFK
+-- 1. TỰ ĐỘNG CHỌN TEAM PIRATE KHI MỚI VÀO GAME
+repeat
+	task.wait(0.1)
+	pcall(function()
+		ReplicatedStorage.Remotes.CommF_:InvokeServer("SetTeam", "Pirates")
+	end)
+until plr.Team ~= nil and (plr.Team.Name == "Pirates" or plr.Team.Name == "Pirate")
+
+-- 2. BYPASS & CHỐNG AFK
 pcall(function()
 	plr.Idled:Connect(function()
 		VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
@@ -36,20 +44,20 @@ pcall(function()
 	if workspace._WorldOrigin:FindFirstChild("Foam;") then workspace._WorldOrigin["Foam;"]:Destroy() end
 end)
 
--- 2. DỮ LIỆU LEVEL, QUEST VÀ VỊ TRÍ ĐẢO (MẪU CÁC MỐC CHÍNH)
+-- 3. CHUẨN HÓA TỌA ĐỘ QUEST & BÃI QUÁI (ĐÃ FIX TỌA ĐỘ CHUẨN BỀ MẶT ĐẤT)
 local QuestData = {
-	-- Sea 1 / Sea 3 Sample Tiers
-	{ MinLvl = 1, MaxLvl = 9, Mob = "Bandit", QuestName = "BanditQuest1", QuestId = 1, NPCPos = CFrame.new(1059, 16, 1549), MobPos = CFrame.new(1038, 40, 1572) },
+	-- Sea 1
+	{ MinLvl = 1, MaxLvl = 9, Mob = "Bandit", QuestName = "BanditQuest1", QuestId = 1, NPCPos = CFrame.new(1059, 16, 1549), MobPos = CFrame.new(1145, 17, 1634) },
 	{ MinLvl = 10, MaxLvl = 14, Mob = "Monkey", QuestName = "JungleQuest", QuestId = 1, NPCPos = CFrame.new(-1598, 37, 153), MobPos = CFrame.new(-1496, 37, 36) },
 	{ MinLvl = 15, MaxLvl = 29, Mob = "Gorilla", QuestName = "JungleQuest", QuestId = 2, NPCPos = CFrame.new(-1598, 37, 153), MobPos = CFrame.new(-1237, 6, -486) },
+	
+	-- Sea 3 (Ví dụ mẫu)
 	{ MinLvl = 1500, MaxLvl = 1524, Mob = "Pirate Millionaire", QuestName = "PortTownQuest", QuestId = 1, NPCPos = CFrame.new(-290, 7, 5343), MobPos = CFrame.new(-712, 98, 5711) },
 	{ MinLvl = 1525, MaxLvl = 1574, Mob = "Pistol Billionaire", QuestName = "PortTownQuest", QuestId = 2, NPCPos = CFrame.new(-290, 7, 5343), MobPos = CFrame.new(-723, 147, 5931) },
-	{ MinLvl = 1575, MaxLvl = 1624, Mob = "Dragon Crew Warrior", QuestName = "AmazonQuest", QuestId = 1, NPCPos = CFrame.new(5832, 51, -1103), MobPos = CFrame.new(7021, 55, -730) },
-	{ MinLvl = 2200, MaxLvl = 2249, Mob = "Peanut Scout", QuestName = "PenautQuest", QuestId = 1, NPCPos = CFrame.new(-2013, 37, -10140), MobPos = CFrame.new(-1993, 187, -10103) },
-	{ MinLvl = 2250, MaxLvl = 2299, Mob = "Ice Cream Chef", QuestName = "IceCreamQuest", QuestId = 1, NPCPos = CFrame.new(-820, 65, -10965), MobPos = CFrame.new(-877, 118, -11032) }
+	{ MinLvl = 2200, MaxLvl = 2249, Mob = "Peanut Scout", QuestName = "PenautQuest", QuestId = 1, NPCPos = CFrame.new(-2013, 37, -10140), MobPos = CFrame.new(-1993, 187, -10103) }
 }
 
--- 3. HÀM XỬ LÝ NHIỆM VỤ & DI CHUYỂN
+-- 4. HÀM XỬ LÝ DI CHUYỂN & VŨ KHÍ
 local function _tp(cframe)
 	if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
 		plr.Character.HumanoidRootPart.CFrame = cframe
@@ -94,7 +102,7 @@ local function BringEnemy()
 	end
 end
 
--- 4. HÀM FARM VÀ DIỆT QUÁI TARGET
+-- 5. LOGIC DIỆT QUÁI
 local G = {}
 function G.Alive(mob)
 	return mob and mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0
@@ -117,11 +125,11 @@ function G.Kill(mob)
 	_tp(hrp.CFrame * CFrame.new(0, _G.MobHeight, 0))
 end
 
--- 5. VÒNG LẶP CHÍNH (MAIN KAITUN LOGIC)
+-- 6. MAIN LOOP
 task.spawn(function()
 	while task.wait(0.1) do
 		pcall(function()
-			-- Tự động nâng chỉ số Melee/Defense
+			-- Auto Stats
 			if plr.Data.Points.Value > 0 then
 				ReplicatedStorage.Remotes.CommF_:InvokeServer("AddPoint", "Melee", 1)
 				ReplicatedStorage.Remotes.CommF_:InvokeServer("AddPoint", "Defense", 1)
@@ -129,13 +137,13 @@ task.spawn(function()
 
 			local questInfo = GetCurrentQuestData()
 			if questInfo then
-				-- Kiểm tra nếu chưa nhận Quest -> Bay đến NPC nhận Quest
 				if not HasQuest() then
+					-- Bay đứng sát NPC nhận Quest (không cộng thêm chiều cao)
 					_tp(questInfo.NPCPos)
-					task.wait(0.5)
+					task.wait(0.3)
 					ReplicatedStorage.Remotes.CommF_:InvokeServer("StartQuest", questInfo.QuestName, questInfo.QuestId)
 				else
-					-- Đã nhận Quest -> Tìm đúng quái của Quest đó để diệt
+					-- Tìm quái theo tên
 					local targetMob = nil
 					for _, mob in pairs(workspace.Enemies:GetChildren()) do
 						if mob.Name == questInfo.Mob and G.Alive(mob) then
@@ -147,8 +155,8 @@ task.spawn(function()
 					if targetMob then
 						G.Kill(targetMob)
 					else
-						-- Quái chưa spawn -> Bay đến đứng chờ tại bãi quái
-						_tp(questInfo.MobPos * CFrame.new(0, _G.MobHeight, 0))
+						-- Nếu quái chưa spawn, đứng chờ tại bãi cách mặt đất 10-15 studs
+						_tp(questInfo.MobPos * CFrame.new(0, 10, 0))
 					end
 				end
 			end
