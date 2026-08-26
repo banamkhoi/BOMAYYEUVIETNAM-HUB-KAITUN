@@ -1,10 +1,9 @@
 -- ======================================================
--- FULL KAITUN BLOX FRUITS (FAST ATTACK + HIGH FLOAT)
+-- FULL KAITUN BLOX FRUITS (NEW FAST ATTACK + FORCE MELEE + 25 STUDS FLOAT)
 -- ======================================================
 
 _G = _G or {}
-_G.SelectWeapon = "Melee" 
-_G.MobHeight = 25         -- Bay cao hẳn 25 studs trên đầu quái để né đòn & không kẹt đất
+_G.MobHeight = 25         -- Khoảng cách cố định 25 studs trên đầu quái
 _G.BringRange = 250       
 _G.MaxBringMobs = 15
 
@@ -18,9 +17,9 @@ local VirtualUser = game:GetService("VirtualUser")
 
 local plr = Players.LocalPlayer
 
--- 1. LOAD MODULE FAST ATTACK
+-- 1. LOAD FAST ATTACK MỚI
 pcall(function()
-	loadstring(game:HttpGet('https://raw.githubusercontent.com/Dev-AnhTuansitink/Module/refs/heads/main/EzFastAttack.lua'))()
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/TurboLite/Script/refs/heads/main/Artac.lua"))()
 end)
 
 -- 2. TỰ ĐỘNG CHỌN PHE PIRATE
@@ -31,7 +30,29 @@ repeat
 	end)
 until plr.Team ~= nil and (plr.Team.Name == "Pirates" or plr.Team.Name == "Pirate")
 
--- 3. AUTO NOCLIP (BẬT XUYÊN VẬT THỂ)
+-- 3. HÀM ÉP TỰ ĐỘNG CẦM MELEE (NEVER UNEQUIP)
+local function ForceEquipMelee()
+	local char = plr.Character
+	if not char then return end
+	local humanoid = char:FindFirstChildOfClass("Humanoid")
+	if not humanoid then return end
+
+	-- Kiểm tra nếu đang cầm đúng vũ khí Melee
+	local currentTool = char:FindFirstChildOfClass("Tool")
+	if currentTool and (currentTool.ToolTip == "Melee" or currentTool.Name == "Combat") then
+		return
+	end
+
+	-- Nếu cất vũ khí hoặc cầm sai món -> Tự lấy lại Melee từ Backpack
+	for _, tool in pairs(plr.Backpack:GetChildren()) do
+		if tool:IsA("Tool") and (tool.ToolTip == "Melee" or tool.Name == "Combat") then
+			humanoid:EquipTool(tool)
+			break
+		end
+	end
+end
+
+-- 4. NOCLIP VÀ TRIỆT TIÊU TRỌNG LỰC (GIỮ NHÂN VẬT BAY CỐ ĐỊNH 25 STUDS)
 RunService.Stepped:Connect(function()
 	if plr.Character then
 		for _, part in pairs(plr.Character:GetChildren()) do
@@ -39,10 +60,11 @@ RunService.Stepped:Connect(function()
 				part.CanCollide = false
 			end
 		end
+		ForceEquipMelee()
 	end
 end)
 
--- 4. BYPASS ANTI-CHEAT & ANTI-AFK
+-- 5. BYPASS ANTI-CHEAT & ANTI-AFK
 pcall(function()
 	plr.Idled:Connect(function()
 		VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
@@ -59,7 +81,7 @@ pcall(function()
 	if workspace._WorldOrigin:FindFirstChild("Foam;") then workspace._WorldOrigin["Foam;"]:Destroy() end
 end)
 
--- 5. BẢNG DỮ LIỆU QUEST & TỌA ĐỘ BÃI QUÁI
+-- 6. BẢNG DỮ LIỆU QUEST & TỌA ĐỘ BÃI QUÁI
 local QuestData = {
 	-- Sea 1
 	{ MinLvl = 1, MaxLvl = 9, Mob = "Bandit", QuestName = "BanditQuest1", QuestId = 1, NPCPos = CFrame.new(1059, 16, 1549), MobPos = CFrame.new(1145, 17, 1634) },
@@ -72,9 +94,10 @@ local QuestData = {
 	{ MinLvl = 2200, MaxLvl = 2249, Mob = "Peanut Scout", QuestName = "PenautQuest", QuestId = 1, NPCPos = CFrame.new(-2013, 37, -10140), MobPos = CFrame.new(-1993, 187, -10103) }
 }
 
--- 6. HÀM XỬ LÝ DI CHUYỂN & GOM QUÁI
+-- 7. HÀM DI CHUYỂN & KHÓA VỊ TRÍ TRÊN KHÔNG
 local function _tp(cframe)
 	if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+		plr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0) -- Triệt tiêu vận tốc rơi
 		plr.Character.HumanoidRootPart.CFrame = cframe
 	end
 end
@@ -91,13 +114,6 @@ end
 
 local function HasQuest()
 	return plr.PlayerGui.Main:FindFirstChild("Quest") and plr.PlayerGui.Main.Quest.Visible
-end
-
-local function EquipWeapon(weaponName)
-	if not weaponName then return end
-	if plr.Backpack:FindFirstChild(weaponName) then
-		plr.Character.Humanoid:EquipTool(plr.Backpack:FindFirstChild(weaponName))
-	end
 end
 
 local function BringEnemy()
@@ -117,7 +133,7 @@ local function BringEnemy()
 	end
 end
 
--- 7. LOGIC DIỆT QUÁI
+-- 8. LOGIC DIỆT QUÁI
 local G = {}
 function G.Alive(mob)
 	return mob and mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0
@@ -136,16 +152,16 @@ function G.Kill(mob)
 	_B = true
 	BringEnemy()
 
-	EquipWeapon(_G.SelectWeapon)
-	-- Duy trì vị trí lơ lửng trên không trung cao hơn hẳn vị trí đứng của quái
+	ForceEquipMelee()
+	-- Khóa vị trí đúng 25 studs trên đầu quái
 	_tp(hrp.CFrame * CFrame.new(0, _G.MobHeight, 0))
 end
 
--- 8. VÒNG LẶP CHÍNH (MAIN KAITUN LOOP)
+-- 9. MAIN LOOP
 task.spawn(function()
 	while task.wait(0.1) do
 		pcall(function()
-			-- Auto Add Points (Melee & Defense)
+			-- Tự động cộng điểm Melee & Defense
 			if plr.Data.Points.Value > 0 then
 				ReplicatedStorage.Remotes.CommF_:InvokeServer("AddPoint", "Melee", 1)
 				ReplicatedStorage.Remotes.CommF_:InvokeServer("AddPoint", "Defense", 1)
@@ -154,12 +170,10 @@ task.spawn(function()
 			local questInfo = GetCurrentQuestData()
 			if questInfo then
 				if not HasQuest() then
-					-- Bay đến sát NPC nhận Quest
 					_tp(questInfo.NPCPos)
 					task.wait(0.3)
 					ReplicatedStorage.Remotes.CommF_:InvokeServer("StartQuest", questInfo.QuestName, questInfo.QuestId)
 				else
-					-- Tìm quái theo nhiệm vụ
 					local targetMob = nil
 					for _, mob in pairs(workspace.Enemies:GetChildren()) do
 						if mob.Name == questInfo.Mob and G.Alive(mob) then
@@ -171,7 +185,6 @@ task.spawn(function()
 					if targetMob then
 						G.Kill(targetMob)
 					else
-						-- Chờ quái respawn ở độ cao an toàn
 						_tp(questInfo.MobPos * CFrame.new(0, _G.MobHeight, 0))
 					end
 				end
