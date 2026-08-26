@@ -1,10 +1,10 @@
 -- ======================================================
--- FULL KAITUN BLOX FRUITS (NOCLIP + AUTO ATTACK + PIRATE)
+-- FULL KAITUN BLOX FRUITS (FAST ATTACK + HIGH FLOAT)
 -- ======================================================
 
 _G = _G or {}
 _G.SelectWeapon = "Melee" 
-_G.MobHeight = 5          -- Hạ thấp chiều cao đứng trên đầu quái để tránh đụng trần
+_G.MobHeight = 25         -- Bay cao hẳn 25 studs trên đầu quái để né đòn & không kẹt đất
 _G.BringRange = 250       
 _G.MaxBringMobs = 15
 
@@ -18,7 +18,12 @@ local VirtualUser = game:GetService("VirtualUser")
 
 local plr = Players.LocalPlayer
 
--- 1. TỰ ĐỘNG CHỌN PHE PIRATE
+-- 1. LOAD MODULE FAST ATTACK
+pcall(function()
+	loadstring(game:HttpGet('https://raw.githubusercontent.com/Dev-AnhTuansitink/Module/refs/heads/main/EzFastAttack.lua'))()
+end)
+
+-- 2. TỰ ĐỘNG CHỌN PHE PIRATE
 repeat
 	task.wait(0.1)
 	pcall(function()
@@ -26,7 +31,7 @@ repeat
 	end)
 until plr.Team ~= nil and (plr.Team.Name == "Pirates" or plr.Team.Name == "Pirate")
 
--- 2. AUTO NOCLIP (XUYÊN VẬT THỂ - SỬA LỖI KẸT CÁNH QUẠT/CÔNG TRÌNH)
+-- 3. AUTO NOCLIP (BẬT XUYÊN VẬT THỂ)
 RunService.Stepped:Connect(function()
 	if plr.Character then
 		for _, part in pairs(plr.Character:GetChildren()) do
@@ -37,7 +42,7 @@ RunService.Stepped:Connect(function()
 	end
 end)
 
--- 3. BYPASS ANTI-CHEAT & ANTI-AFK
+-- 4. BYPASS ANTI-CHEAT & ANTI-AFK
 pcall(function()
 	plr.Idled:Connect(function()
 		VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
@@ -54,7 +59,7 @@ pcall(function()
 	if workspace._WorldOrigin:FindFirstChild("Foam;") then workspace._WorldOrigin["Foam;"]:Destroy() end
 end)
 
--- 4. BẢNG DỮ LIỆU QUEST & TỌA ĐỘ BÃI QUÁI
+-- 5. BẢNG DỮ LIỆU QUEST & TỌA ĐỘ BÃI QUÁI
 local QuestData = {
 	-- Sea 1
 	{ MinLvl = 1, MaxLvl = 9, Mob = "Bandit", QuestName = "BanditQuest1", QuestId = 1, NPCPos = CFrame.new(1059, 16, 1549), MobPos = CFrame.new(1145, 17, 1634) },
@@ -66,12 +71,6 @@ local QuestData = {
 	{ MinLvl = 1525, MaxLvl = 1574, Mob = "Pistol Billionaire", QuestName = "PortTownQuest", QuestId = 2, NPCPos = CFrame.new(-290, 7, 5343), MobPos = CFrame.new(-723, 147, 5931) },
 	{ MinLvl = 2200, MaxLvl = 2249, Mob = "Peanut Scout", QuestName = "PenautQuest", QuestId = 1, NPCPos = CFrame.new(-2013, 37, -10140), MobPos = CFrame.new(-1993, 187, -10103) }
 }
-
--- 5. HÀM TỰ ĐỘNG ĐÁNH (AUTO CLICK)
-local function AutoClick()
-	VirtualUser:CaptureController()
-	VirtualUser:Button1Down(Vector2.new(500, 500))
-end
 
 -- 6. HÀM XỬ LÝ DI CHUYỂN & GOM QUÁI
 local function _tp(cframe)
@@ -138,15 +137,15 @@ function G.Kill(mob)
 	BringEnemy()
 
 	EquipWeapon(_G.SelectWeapon)
+	-- Duy trì vị trí lơ lửng trên không trung cao hơn hẳn vị trí đứng của quái
 	_tp(hrp.CFrame * CFrame.new(0, _G.MobHeight, 0))
-	AutoClick()
 end
 
--- 8. VÒNG LẶP CHÍNH (MAIN LOOP)
+-- 8. VÒNG LẶP CHÍNH (MAIN KAITUN LOOP)
 task.spawn(function()
 	while task.wait(0.1) do
 		pcall(function()
-			-- Tự động tăng điểm chỉ số (Melee / Defense)
+			-- Auto Add Points (Melee & Defense)
 			if plr.Data.Points.Value > 0 then
 				ReplicatedStorage.Remotes.CommF_:InvokeServer("AddPoint", "Melee", 1)
 				ReplicatedStorage.Remotes.CommF_:InvokeServer("AddPoint", "Defense", 1)
@@ -155,12 +154,12 @@ task.spawn(function()
 			local questInfo = GetCurrentQuestData()
 			if questInfo then
 				if not HasQuest() then
-					-- Bay sát NPC nhận Quest
+					-- Bay đến sát NPC nhận Quest
 					_tp(questInfo.NPCPos)
 					task.wait(0.3)
 					ReplicatedStorage.Remotes.CommF_:InvokeServer("StartQuest", questInfo.QuestName, questInfo.QuestId)
 				else
-					-- Tìm quái để diệt
+					-- Tìm quái theo nhiệm vụ
 					local targetMob = nil
 					for _, mob in pairs(workspace.Enemies:GetChildren()) do
 						if mob.Name == questInfo.Mob and G.Alive(mob) then
@@ -172,8 +171,8 @@ task.spawn(function()
 					if targetMob then
 						G.Kill(targetMob)
 					else
-						-- Nếu chưa có quái, bay đứng chờ ở bãi
-						_tp(questInfo.MobPos * CFrame.new(0, 5, 0))
+						-- Chờ quái respawn ở độ cao an toàn
+						_tp(questInfo.MobPos * CFrame.new(0, _G.MobHeight, 0))
 					end
 				end
 			end
