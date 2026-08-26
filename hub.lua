@@ -1,11 +1,39 @@
 pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AnhTuanDzai-Hub/FastAttackLoL/refs/heads/main/FastAttack.lua"))() end)
 
 -- ======================================================
--- FULL KAITUN BLOX FRUITS (FAST ATTACK DÒNG 1 + AUTO FARM)
+-- HIỂN THỊ TEXT "KAITUN" ĐỂ BIẾT SCRIPT ĐÃ LÊN
+-- ======================================================
+pcall(function()
+	-- Thông báo StarterGui
+	game:GetService("StarterGui"):SetCore("SendNotification", {
+		Title = "KAITUN HUB",
+		Text = "kaitun đã load thành công!",
+		Duration = 10
+	})
+	
+	-- Tạo bảng chữ KAITUN nổi trên màn hình
+	local sgui = Instance.new("ScreenGui")
+	sgui.Name = "KaitunCheckGui"
+	sgui.Parent = game:GetService("CoreGui")
+	
+	local lbl = Instance.new("TextLabel")
+	lbl.Parent = sgui
+	lbl.Size = UDim2.new(0, 200, 0, 40)
+	lbl.Position = UDim2.new(0.5, -100, 0.05, 0)
+	lbl.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	lbl.TextColor3 = Color3.fromRGB(0, 255, 127)
+	lbl.Text = "KAITUN: ON"
+	lbl.TextSize = 20
+	lbl.Font = Enum.Font.SourceSansBold
+	lbl.Active = true
+end)
+
+-- ======================================================
+-- FULL KAITUN BLOX FRUITS
 -- ======================================================
 
 _G = _G or {}
-_G.MobHeight = 25         -- Khoảng cách cố định 25 studs trên đầu quái
+_G.MobHeight = 25         -- Bay cao 25 studs
 _G.BringRange = 250       
 _G.MaxBringMobs = 15
 
@@ -19,7 +47,7 @@ local VirtualUser = game:GetService("VirtualUser")
 
 local plr = Players.LocalPlayer
 
--- 1. TỰ ĐỘNG CHỌN PHE PIRATE
+-- 1. AUTO CHỌN PHE PIRATE
 repeat
 	task.wait(0.1)
 	pcall(function()
@@ -27,7 +55,7 @@ repeat
 	end)
 until plr.Team ~= nil and (plr.Team.Name == "Pirates" or plr.Team.Name == "Pirate")
 
--- 2. HÀM ÉP TỰ ĐỘNG CẦM MELEE (NEVER UNEQUIP)
+-- 2. HÀM ÉP CẦM MELEE
 local function ForceEquipMelee()
 	local char = plr.Character
 	if not char then return end
@@ -47,7 +75,7 @@ local function ForceEquipMelee()
 	end
 end
 
--- 3. NOCLIP VÀ TRIỆT TIÊU LỖI ĐỔI VŨ KHÍ
+-- 3. NOCLIP VÀ TỰ ĐỘNG CẦM VŨ KHÍ
 RunService.Stepped:Connect(function()
 	if plr.Character then
 		for _, part in pairs(plr.Character:GetChildren()) do
@@ -59,7 +87,7 @@ RunService.Stepped:Connect(function()
 	end
 end)
 
--- 4. BYPASS ANTI-CHEAT & ANTI-AFK
+-- 4. BYPASS & ANTI-AFK
 pcall(function()
 	plr.Idled:Connect(function()
 		VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
@@ -76,7 +104,7 @@ pcall(function()
 	if workspace._WorldOrigin:FindFirstChild("Foam;") then workspace._WorldOrigin["Foam;"]:Destroy() end
 end)
 
--- 5. BẢNG DỮ LIỆU QUEST & TỌA ĐỘ BÃI QUÁI
+-- 5. BẢNG DỮ LIỆU QUEST
 local QuestData = {
 	-- Sea 1
 	{ MinLvl = 1, MaxLvl = 9, Mob = "Bandit", QuestName = "BanditQuest1", QuestId = 1, NPCPos = CFrame.new(1059, 16, 1549), MobPos = CFrame.new(1145, 17, 1634) },
@@ -89,7 +117,7 @@ local QuestData = {
 	{ MinLvl = 2200, MaxLvl = 2249, Mob = "Peanut Scout", QuestName = "PenautQuest", QuestId = 1, NPCPos = CFrame.new(-2013, 37, -10140), MobPos = CFrame.new(-1993, 187, -10103) }
 }
 
--- 6. HÀM DI CHUYỂN & KHÓA VỊ TRÍ TRÊN KHÔNG
+-- 6. HÀM TP VÀ GOM QUÁI
 local function _tp(cframe)
 	if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
 		plr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
@@ -128,7 +156,7 @@ local function BringEnemy()
 	end
 end
 
--- 7. LOGIC DIỆT QUÁI (KÍCH HOẠT NHẤP CHUỘT LIÊN TỤC ĐỂ MỒ MÃ FAST ATTACK)
+-- 7. DIỆT QUÁI
 local G = {}
 function G.Alive(mob)
 	return mob and mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0
@@ -150,16 +178,14 @@ function G.Kill(mob)
 	ForceEquipMelee()
 	_tp(hrp.CFrame * CFrame.new(0, _G.MobHeight, 0))
 
-	-- Tạo sự kiện nhấp chuột liên tục để kích hoạt module Fast Attack
 	VirtualUser:CaptureController()
 	VirtualUser:Button1Down(Vector2.new(500, 500))
 end
 
--- 8. MAIN KAITUN LOOP
+-- 8. MAIN LOOP
 task.spawn(function()
 	while task.wait(0.1) do
 		pcall(function()
-			-- Tự động tăng điểm Melee & Defense
 			if plr.Data.Points.Value > 0 then
 				ReplicatedStorage.Remotes.CommF_:InvokeServer("AddPoint", "Melee", 1)
 				ReplicatedStorage.Remotes.CommF_:InvokeServer("AddPoint", "Defense", 1)
