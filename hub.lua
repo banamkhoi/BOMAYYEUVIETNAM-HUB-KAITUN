@@ -1,4 +1,5 @@
 loadstring(game:HttpGet("https://raw.githubusercontent.com/thienvl1395-dot/script/refs/heads/main/attack.lua"))()
+
 -- Chờ game load hoàn tất
 repeat task.wait() until game:IsLoaded() and game.Players.LocalPlayer
 
@@ -223,4 +224,10 @@ task.spawn(function()
 					if targetMob then
 						G.Kill(targetMob)
 					else
-						_tp(questInfo.MobPos * CFrame.new(0, _G.MobHeight, 0)
+						_tp(questInfo.MobPos * CFrame.new(0, _G.MobHeight, 0))
+					end
+				end
+			end
+		end)
+	end
+end)
