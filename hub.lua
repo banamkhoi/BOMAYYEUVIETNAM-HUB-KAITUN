@@ -1,51 +1,38 @@
--- Chờ game load hoàn tất tránh crash script khi mới vào
+loadstring(game:HttpGet("https://raw.githubusercontent.com/AnhTuanDzai-Hub/FastAttackLoL/refs/heads/main/FastAttack.lua"))()
+
+-- Chờ game load hoàn tất
 repeat task.wait() until game:IsLoaded() and game.Players.LocalPlayer
 
--- 1. HIỂN THỊ UI "KAITUN HUB: ON" (TƯƠNG THÍCH MỌI EXECUTOR)
-pcall(function()
-	local plr = game:GetService("Players").LocalPlayer
-	local parentGui = (gethui and gethui()) or game:GetService("CoreGui") or plr:WaitForChild("PlayerGui")
+-- HIỂN THỊ UI "KAITUN HUB: ON"
+local plr = game:GetService("Players").LocalPlayer
+local parentGui = (gethui and gethui()) or game:GetService("CoreGui") or plr:WaitForChild("PlayerGui")
 
-	if parentGui:FindFirstChild("KaitunCheckGui") then
-		parentGui.KaitunCheckGui:Destroy()
-	end
+if parentGui:FindFirstChild("KaitunCheckGui") then
+	parentGui.KaitunCheckGui:Destroy()
+end
 
-	local sgui = Instance.new("ScreenGui")
-	sgui.Name = "KaitunCheckGui"
-	sgui.Parent = parentGui
+local sgui = Instance.new("ScreenGui")
+sgui.Name = "KaitunCheckGui"
+sgui.Parent = parentGui
 
-	local lbl = Instance.new("TextLabel")
-	lbl.Parent = sgui
-	lbl.Size = UDim2.new(0, 220, 0, 45)
-	lbl.Position = UDim2.new(0.5, -110, 0.05, 0)
-	lbl.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-	lbl.BorderColor3 = Color3.fromRGB(0, 255, 127)
-	lbl.BorderSizePixel = 2
-	lbl.TextColor3 = Color3.fromRGB(0, 255, 127)
-	lbl.Text = "KAITUN HUB: ON"
-	lbl.TextSize = 18
-	lbl.Font = Enum.Font.SourceSansBold
-
-	game:GetService("StarterGui"):SetCore("SendNotification", {
-		Title = "KAITUN HUB",
-		Text = "Script đã chạy thành công!",
-		Duration = 5
-	})
-end)
-
--- 2. LOAD FAST ATTACK Ở LUỒNG PHỤ (KHÔNG CÒN LO NGHẼN/SẬP SCRIPT CHÍNH)
-task.spawn(function()
-	pcall(function()
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/AnhTuanDzai-Hub/FastAttackLoL/refs/heads/main/FastAttack.lua"))()
-	end)
-end)
+local lbl = Instance.new("TextLabel")
+lbl.Parent = sgui
+lbl.Size = UDim2.new(0, 220, 0, 45)
+lbl.Position = UDim2.new(0.5, -110, 0.05, 0)
+lbl.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+lbl.BorderColor3 = Color3.fromRGB(0, 255, 127)
+lbl.BorderSizePixel = 2
+lbl.TextColor3 = Color3.fromRGB(0, 255, 127)
+lbl.Text = "KAITUN HUB: ON"
+lbl.TextSize = 18
+lbl.Font = Enum.Font.SourceSansBold
 
 -- ======================================================
--- FULL KAITUN LOGIC
+-- FULL KAITUN LOGIC (25 STUDS FLOAT + FORCE MELEE)
 -- ======================================================
 
 _G = _G or {}
-_G.MobHeight = 25         -- Khoảng cách 25 studs trên đầu quái
+_G.MobHeight = 25         -- Bay cao 25 studs trên đầu quái
 _G.BringRange = 250       
 _G.MaxBringMobs = 15
 
@@ -57,8 +44,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local VirtualUser = game:GetService("VirtualUser")
 
-local plr = Players.LocalPlayer
-
 -- Auto chọn phe Pirate
 task.spawn(function()
 	repeat
@@ -69,7 +54,7 @@ task.spawn(function()
 	until plr.Team ~= nil and (plr.Team.Name == "Pirates" or plr.Team.Name == "Pirate")
 end)
 
--- Hàm bắt buộc luôn cầm Melee
+-- Bắt buộc luôn cầm Melee (Không thể cất hay đổi)
 local function ForceEquipMelee()
 	local char = plr.Character
 	if not char then return end
@@ -89,7 +74,7 @@ local function ForceEquipMelee()
 	end
 end
 
--- Noclip & Duy trì Melee
+-- Noclip + Auto Equip Melee liên tục
 RunService.Stepped:Connect(function()
 	if plr.Character then
 		for _, part in pairs(plr.Character:GetChildren()) do
@@ -101,19 +86,14 @@ RunService.Stepped:Connect(function()
 	end
 end)
 
--- Anti AFK & Cleanser
-pcall(function()
-	plr.Idled:Connect(function()
-		VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
-		task.wait(1)
-		VirtualUser:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
-	end)
-
-	if workspace:FindFirstChild("Rocks") then workspace.Rocks:Destroy() end
-	if workspace._WorldOrigin:FindFirstChild("Foam;") then workspace._WorldOrigin["Foam;"]:Destroy() end
+-- Anti AFK
+plr.Idled:Connect(function()
+	VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+	task.wait(1)
+	VirtualUser:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
 end)
 
--- Dữ liệu Quest
+-- Bảng Quest
 local QuestData = {
 	-- Sea 1
 	{ MinLvl = 1, MaxLvl = 9, Mob = "Bandit", QuestName = "BanditQuest1", QuestId = 1, NPCPos = CFrame.new(1059, 16, 1549), MobPos = CFrame.new(1145, 17, 1634) },
@@ -190,7 +170,7 @@ function G.Kill(mob)
 	VirtualUser:Button1Down(Vector2.new(500, 500))
 end
 
--- Vòng lặp chính
+-- Vòng lặp Farm chính
 task.spawn(function()
 	while task.wait(0.1) do
 		pcall(function()
