@@ -1,55 +1,50 @@
-loadstring(game:HttpGet("https://raw.githubusercontent.com/thienvl1395-dot/script/refs/heads/main/attack.lua"))()
-
--- Chờ game load hoàn tất
 repeat task.wait() until game:IsLoaded() and game.Players.LocalPlayer
-
--- HIỂN THỊ UI "KAITUN HUB: ON"
-local plr = game:GetService("Players").LocalPlayer
-local parentGui = (gethui and gethui()) or game:GetService("CoreGui") or plr:WaitForChild("PlayerGui")
-
-if parentGui:FindFirstChild("KaitunCheckGui") then
-	parentGui.KaitunCheckGui:Destroy()
-end
-
-local sgui = Instance.new("ScreenGui")
-sgui.Name = "KaitunCheckGui"
-sgui.Parent = parentGui
-
-local lbl = Instance.new("TextLabel")
-lbl.Parent = sgui
-lbl.Size = UDim2.new(0, 220, 0, 45)
-lbl.Position = UDim2.new(0.5, -110, 0.05, 0)
-lbl.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-lbl.BorderColor3 = Color3.fromRGB(0, 255, 127)
-lbl.BorderSizePixel = 2
-lbl.TextColor3 = Color3.fromRGB(0, 255, 127)
-lbl.Text = "KAITUN HUB: ON"
-lbl.TextSize = 18
-lbl.Font = Enum.Font.SourceSansBold
-
--- ======================================================
--- FULL KAITUN LOGIC (TWEEN FLY CHỐNG BAN + 25 STUDS FLOAT)
--- ======================================================
-
-_G = _G or {}
-_G.MobHeight = 25         -- Khoảng cách 25 studs trên đầu quái
-_G.BringRange = 250       
-_G.MaxBringMobs = 15
-_G.FlySpeed = 300         -- Tốc độ bay an toàn chống Anti-Cheat (studs/s)
-
-_B = false
-PosMon = nil
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
 local VirtualUser = game:GetService("VirtualUser")
+
+local plr = Players.LocalPlayer
+
+-- HIỂN THỊ UI "KAITUN HUB: ON"
+pcall(function()
+	local parentGui = (gethui and gethui()) or game:GetService("CoreGui") or plr:WaitForChild("PlayerGui")
+	if parentGui:FindFirstChild("KaitunCheckGui") then parentGui.KaitunCheckGui:Destroy() end
+
+	local sgui = Instance.new("ScreenGui")
+	sgui.Name = "KaitunCheckGui"
+	sgui.Parent = parentGui
+
+	local lbl = Instance.new("TextLabel")
+	lbl.Parent = sgui
+	lbl.Size = UDim2.new(0, 220, 0, 45)
+	lbl.Position = UDim2.new(0.5, -110, 0.05, 0)
+	lbl.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+	lbl.BorderColor3 = Color3.fromRGB(0, 255, 127)
+	lbl.BorderSizePixel = 2
+	lbl.TextColor3 = Color3.fromRGB(0, 255, 127)
+	lbl.Text = "KAITUN HUB: ON"
+	lbl.TextSize = 18
+	lbl.Font = Enum.Font.SourceSansBold
+end)
+
+-- CẤU HÌNH CƠ BẢN
+_G = _G or {}
+_G.MobHeight = 12         -- Hạ độ cao xuống 12 studs để trúng Hitbox Melee
+_G.BringRange = 250       
+_G.MaxBringMobs = 15
+_G.FlySpeed = 300         -- Tốc độ bay an toàn
+
+_B = false
+PosMon = nil
 
 local currentTween = nil
 local currentTarget = nil
 
--- Auto chọn phe Pirate
+-- 1. AUTO CHỌN PHE PIRATE
 task.spawn(function()
 	repeat
 		task.wait(0.1)
@@ -59,7 +54,7 @@ task.spawn(function()
 	until plr.Team ~= nil and (plr.Team.Name == "Pirates" or plr.Team.Name == "Pirate")
 end)
 
--- Bắt buộc luôn cầm Melee (Không thể cất hay đổi)
+-- 2. HÀM ÉP CẦM MELEE
 local function ForceEquipMelee()
 	local char = plr.Character
 	if not char then return end
@@ -79,7 +74,7 @@ local function ForceEquipMelee()
 	end
 end
 
--- Noclip + Auto Equip Melee liên tục
+-- 3. NOCLIP + KEEP MELEE
 RunService.Stepped:Connect(function()
 	if plr.Character then
 		for _, part in pairs(plr.Character:GetChildren()) do
@@ -91,20 +86,19 @@ RunService.Stepped:Connect(function()
 	end
 end)
 
--- Anti AFK
+-- 4. ANTI AFK
 plr.Idled:Connect(function()
 	VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
 	task.wait(1)
 	VirtualUser:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
 end)
 
--- HÀM BAY AN TOÀN (TWEEN FLY SYSTEM)
+-- 5. TWEEN FLY SYSTEM
 local function _tp(cframe)
 	if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then return end
 	local hrp = plr.Character.HumanoidRootPart
 	local distance = (hrp.Position - cframe.Position).Magnitude
 
-	-- Ở khoảng cách gần (< 15 studs) -> Giữ vị trí cố định trên không
 	if distance <= 15 then
 		if currentTween then
 			currentTween:Cancel()
@@ -113,7 +107,6 @@ local function _tp(cframe)
 		hrp.Velocity = Vector3.new(0, 0, 0)
 		hrp.CFrame = cframe
 	else
-		-- Ở khoảng cách xa -> Bay mượt mà bằng TweenService
 		if not currentTween or (currentTarget and (currentTarget.Position - cframe.Position).Magnitude > 5) then
 			if currentTween then currentTween:Cancel() end
 			currentTarget = cframe
@@ -125,7 +118,7 @@ local function _tp(cframe)
 	end
 end
 
--- Bảng Quest
+-- 6. DỮ LIỆU QUEST & FARM LOGIC
 local QuestData = {
 	-- Sea 1
 	{ MinLvl = 1, MaxLvl = 9, Mob = "Bandit", QuestName = "BanditQuest1", QuestId = 1, NPCPos = CFrame.new(1059, 16, 1549), MobPos = CFrame.new(1145, 17, 1634) },
@@ -190,12 +183,9 @@ function G.Kill(mob)
 
 	ForceEquipMelee()
 	_tp(hrp.CFrame * CFrame.new(0, _G.MobHeight, 0))
-
-	VirtualUser:CaptureController()
-	VirtualUser:Button1Down(Vector2.new(500, 500))
 end
 
--- Vòng lặp Farm chính
+-- VÒNG LẶP FARM CHÍNH
 task.spawn(function()
 	while task.wait(0.1) do
 		pcall(function()
@@ -207,6 +197,7 @@ task.spawn(function()
 			local questInfo = GetCurrentQuestData()
 			if questInfo then
 				if not HasQuest() then
+					_B = false
 					_tp(questInfo.NPCPos)
 					task.wait(0.3)
 					ReplicatedStorage.Remotes.CommF_:InvokeServer("StartQuest", questInfo.QuestName, questInfo.QuestId)
@@ -224,6 +215,7 @@ task.spawn(function()
 					if targetMob then
 						G.Kill(targetMob)
 					else
+						_B = false
 						_tp(questInfo.MobPos * CFrame.new(0, _G.MobHeight, 0))
 					end
 				end
