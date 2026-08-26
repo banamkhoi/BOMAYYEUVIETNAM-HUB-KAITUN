@@ -1,4 +1,4 @@
-loadstring(game:HttpGet("https://raw.githubusercontent.com/AnhTuanDzai-Hub/FastAttackLoL/refs/heads/main/FastAttack.lua"))() end)
+pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AnhTuanDzai-Hub/FastAttackLoL/refs/heads/main/FastAttack.lua"))() end)
 
 -- ======================================================
 -- FULL KAITUN BLOX FRUITS (FAST ATTACK DÒNG 1 + AUTO FARM)
