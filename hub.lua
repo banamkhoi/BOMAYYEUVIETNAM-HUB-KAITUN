@@ -28,13 +28,14 @@ lbl.TextSize = 18
 lbl.Font = Enum.Font.SourceSansBold
 
 -- ======================================================
--- FULL KAITUN LOGIC (25 STUDS FLOAT + FORCE MELEE)
+-- FULL KAITUN LOGIC (TWEEN FLY CHỐNG BAN + 25 STUDS FLOAT)
 -- ======================================================
 
 _G = _G or {}
-_G.MobHeight = 25         -- Bay cao 25 studs trên đầu quái
+_G.MobHeight = 25         -- Khoảng cách 25 studs trên đầu quái
 _G.BringRange = 250       
 _G.MaxBringMobs = 15
+_G.FlySpeed = 300         -- Tốc độ bay an toàn chống Anti-Cheat (studs/s)
 
 _B = false
 PosMon = nil
@@ -42,7 +43,11 @@ PosMon = nil
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 local VirtualUser = game:GetService("VirtualUser")
+
+local currentTween = nil
+local currentTarget = nil
 
 -- Auto chọn phe Pirate
 task.spawn(function()
@@ -93,6 +98,33 @@ plr.Idled:Connect(function()
 	VirtualUser:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
 end)
 
+-- HÀM BAY AN TOÀN (TWEEN FLY SYSTEM)
+local function _tp(cframe)
+	if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then return end
+	local hrp = plr.Character.HumanoidRootPart
+	local distance = (hrp.Position - cframe.Position).Magnitude
+
+	-- Ở khoảng cách gần (< 15 studs) -> Giữ vị trí cố định trên không
+	if distance <= 15 then
+		if currentTween then
+			currentTween:Cancel()
+			currentTween = nil
+		end
+		hrp.Velocity = Vector3.new(0, 0, 0)
+		hrp.CFrame = cframe
+	else
+		-- Ở khoảng cách xa -> Bay mượt mà bằng TweenService
+		if not currentTween or (currentTarget and (currentTarget.Position - cframe.Position).Magnitude > 5) then
+			if currentTween then currentTween:Cancel() end
+			currentTarget = cframe
+			local timeToFly = distance / _G.FlySpeed
+			local tweenInfo = TweenInfo.new(timeToFly, Enum.EasingStyle.Linear)
+			currentTween = TweenService:Create(hrp, tweenInfo, {CFrame = cframe})
+			currentTween:Play()
+		end
+	end
+end
+
 -- Bảng Quest
 local QuestData = {
 	-- Sea 1
@@ -105,13 +137,6 @@ local QuestData = {
 	{ MinLvl = 1525, MaxLvl = 1574, Mob = "Pistol Billionaire", QuestName = "PortTownQuest", QuestId = 2, NPCPos = CFrame.new(-290, 7, 5343), MobPos = CFrame.new(-723, 147, 5931) },
 	{ MinLvl = 2200, MaxLvl = 2249, Mob = "Peanut Scout", QuestName = "PenautQuest", QuestId = 1, NPCPos = CFrame.new(-2013, 37, -10140), MobPos = CFrame.new(-1993, 187, -10103) }
 }
-
-local function _tp(cframe)
-	if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-		plr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
-		plr.Character.HumanoidRootPart.CFrame = cframe
-	end
-end
 
 local function GetCurrentQuestData()
 	if not plr:FindFirstChild("Data") or not plr.Data:FindFirstChild("Level") then return nil end
