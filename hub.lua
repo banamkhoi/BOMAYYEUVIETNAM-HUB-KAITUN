@@ -1,39 +1,51 @@
-pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AnhTuanDzai-Hub/FastAttackLoL/refs/heads/main/FastAttack.lua"))() end)
+-- Chờ game load hoàn tất tránh crash script khi mới vào
+repeat task.wait() until game:IsLoaded() and game.Players.LocalPlayer
 
--- ======================================================
--- HIỂN THỊ TEXT "KAITUN" ĐỂ BIẾT SCRIPT ĐÃ LÊN
--- ======================================================
+-- 1. HIỂN THỊ UI "KAITUN HUB: ON" (TƯƠNG THÍCH MỌI EXECUTOR)
 pcall(function()
-	-- Thông báo StarterGui
-	game:GetService("StarterGui"):SetCore("SendNotification", {
-		Title = "KAITUN HUB",
-		Text = "kaitun đã load thành công!",
-		Duration = 10
-	})
-	
-	-- Tạo bảng chữ KAITUN nổi trên màn hình
+	local plr = game:GetService("Players").LocalPlayer
+	local parentGui = (gethui and gethui()) or game:GetService("CoreGui") or plr:WaitForChild("PlayerGui")
+
+	if parentGui:FindFirstChild("KaitunCheckGui") then
+		parentGui.KaitunCheckGui:Destroy()
+	end
+
 	local sgui = Instance.new("ScreenGui")
 	sgui.Name = "KaitunCheckGui"
-	sgui.Parent = game:GetService("CoreGui")
-	
+	sgui.Parent = parentGui
+
 	local lbl = Instance.new("TextLabel")
 	lbl.Parent = sgui
-	lbl.Size = UDim2.new(0, 200, 0, 40)
-	lbl.Position = UDim2.new(0.5, -100, 0.05, 0)
-	lbl.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	lbl.Size = UDim2.new(0, 220, 0, 45)
+	lbl.Position = UDim2.new(0.5, -110, 0.05, 0)
+	lbl.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+	lbl.BorderColor3 = Color3.fromRGB(0, 255, 127)
+	lbl.BorderSizePixel = 2
 	lbl.TextColor3 = Color3.fromRGB(0, 255, 127)
-	lbl.Text = "KAITUN: ON"
-	lbl.TextSize = 20
+	lbl.Text = "KAITUN HUB: ON"
+	lbl.TextSize = 18
 	lbl.Font = Enum.Font.SourceSansBold
-	lbl.Active = true
+
+	game:GetService("StarterGui"):SetCore("SendNotification", {
+		Title = "KAITUN HUB",
+		Text = "Script đã chạy thành công!",
+		Duration = 5
+	})
+end)
+
+-- 2. LOAD FAST ATTACK Ở LUỒNG PHỤ (KHÔNG CÒN LO NGHẼN/SẬP SCRIPT CHÍNH)
+task.spawn(function()
+	pcall(function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/AnhTuanDzai-Hub/FastAttackLoL/refs/heads/main/FastAttack.lua"))()
+	end)
 end)
 
 -- ======================================================
--- FULL KAITUN BLOX FRUITS
+-- FULL KAITUN LOGIC
 -- ======================================================
 
 _G = _G or {}
-_G.MobHeight = 25         -- Bay cao 25 studs
+_G.MobHeight = 25         -- Khoảng cách 25 studs trên đầu quái
 _G.BringRange = 250       
 _G.MaxBringMobs = 15
 
@@ -47,15 +59,17 @@ local VirtualUser = game:GetService("VirtualUser")
 
 local plr = Players.LocalPlayer
 
--- 1. AUTO CHỌN PHE PIRATE
-repeat
-	task.wait(0.1)
-	pcall(function()
-		ReplicatedStorage.Remotes.CommF_:InvokeServer("SetTeam", "Pirates")
-	end)
-until plr.Team ~= nil and (plr.Team.Name == "Pirates" or plr.Team.Name == "Pirate")
+-- Auto chọn phe Pirate
+task.spawn(function()
+	repeat
+		task.wait(0.1)
+		pcall(function()
+			ReplicatedStorage.Remotes.CommF_:InvokeServer("SetTeam", "Pirates")
+		end)
+	until plr.Team ~= nil and (plr.Team.Name == "Pirates" or plr.Team.Name == "Pirate")
+end)
 
--- 2. HÀM ÉP CẦM MELEE
+-- Hàm bắt buộc luôn cầm Melee
 local function ForceEquipMelee()
 	local char = plr.Character
 	if not char then return end
@@ -75,7 +89,7 @@ local function ForceEquipMelee()
 	end
 end
 
--- 3. NOCLIP VÀ TỰ ĐỘNG CẦM VŨ KHÍ
+-- Noclip & Duy trì Melee
 RunService.Stepped:Connect(function()
 	if plr.Character then
 		for _, part in pairs(plr.Character:GetChildren()) do
@@ -87,7 +101,7 @@ RunService.Stepped:Connect(function()
 	end
 end)
 
--- 4. BYPASS & ANTI-AFK
+-- Anti AFK & Cleanser
 pcall(function()
 	plr.Idled:Connect(function()
 		VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
@@ -95,16 +109,11 @@ pcall(function()
 		VirtualUser:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
 	end)
 
-	hookfunction(require(ReplicatedStorage.Effect.Container.Death), function() end)
-	hookfunction(require(ReplicatedStorage:WaitForChild("GuideModule")).ChangeDisplayedNPC, function() end)
-	hookfunction(error, function() end)
-	hookfunction(warn, function() end)
-
 	if workspace:FindFirstChild("Rocks") then workspace.Rocks:Destroy() end
 	if workspace._WorldOrigin:FindFirstChild("Foam;") then workspace._WorldOrigin["Foam;"]:Destroy() end
 end)
 
--- 5. BẢNG DỮ LIỆU QUEST
+-- Dữ liệu Quest
 local QuestData = {
 	-- Sea 1
 	{ MinLvl = 1, MaxLvl = 9, Mob = "Bandit", QuestName = "BanditQuest1", QuestId = 1, NPCPos = CFrame.new(1059, 16, 1549), MobPos = CFrame.new(1145, 17, 1634) },
@@ -117,7 +126,6 @@ local QuestData = {
 	{ MinLvl = 2200, MaxLvl = 2249, Mob = "Peanut Scout", QuestName = "PenautQuest", QuestId = 1, NPCPos = CFrame.new(-2013, 37, -10140), MobPos = CFrame.new(-1993, 187, -10103) }
 }
 
--- 6. HÀM TP VÀ GOM QUÁI
 local function _tp(cframe)
 	if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
 		plr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
@@ -126,6 +134,7 @@ local function _tp(cframe)
 end
 
 local function GetCurrentQuestData()
+	if not plr:FindFirstChild("Data") or not plr.Data:FindFirstChild("Level") then return nil end
 	local myLevel = plr.Data.Level.Value
 	for _, q in ipairs(QuestData) do
 		if myLevel >= q.MinLvl and myLevel <= q.MaxLvl then
@@ -136,11 +145,11 @@ local function GetCurrentQuestData()
 end
 
 local function HasQuest()
-	return plr.PlayerGui.Main:FindFirstChild("Quest") and plr.PlayerGui.Main.Quest.Visible
+	return plr.PlayerGui:FindFirstChild("Main") and plr.PlayerGui.Main:FindFirstChild("Quest") and plr.PlayerGui.Main.Quest.Visible
 end
 
 local function BringEnemy()
-	if not PosMon or not _B then return end
+	if not PosMon or not _B or not workspace:FindFirstChild("Enemies") then return end
 	local count = 0
 	for _, mob in pairs(workspace.Enemies:GetChildren()) do
 		if mob:FindFirstChild("HumanoidRootPart") and mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 then
@@ -156,7 +165,6 @@ local function BringEnemy()
 	end
 end
 
--- 7. DIỆT QUÁI
 local G = {}
 function G.Alive(mob)
 	return mob and mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0
@@ -182,11 +190,11 @@ function G.Kill(mob)
 	VirtualUser:Button1Down(Vector2.new(500, 500))
 end
 
--- 8. MAIN LOOP
+-- Vòng lặp chính
 task.spawn(function()
 	while task.wait(0.1) do
 		pcall(function()
-			if plr.Data.Points.Value > 0 then
+			if plr:FindFirstChild("Data") and plr.Data:FindFirstChild("Points") and plr.Data.Points.Value > 0 then
 				ReplicatedStorage.Remotes.CommF_:InvokeServer("AddPoint", "Melee", 1)
 				ReplicatedStorage.Remotes.CommF_:InvokeServer("AddPoint", "Defense", 1)
 			end
@@ -199,10 +207,12 @@ task.spawn(function()
 					ReplicatedStorage.Remotes.CommF_:InvokeServer("StartQuest", questInfo.QuestName, questInfo.QuestId)
 				else
 					local targetMob = nil
-					for _, mob in pairs(workspace.Enemies:GetChildren()) do
-						if mob.Name == questInfo.Mob and G.Alive(mob) then
-							targetMob = mob
-							break
+					if workspace:FindFirstChild("Enemies") then
+						for _, mob in pairs(workspace.Enemies:GetChildren()) do
+							if mob.Name == questInfo.Mob and G.Alive(mob) then
+								targetMob = mob
+								break
+							end
 						end
 					end
 
