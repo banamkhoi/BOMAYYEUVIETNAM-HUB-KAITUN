@@ -1,5 +1,3 @@
-loadstring(game:HttpGet("https://raw.githubusercontent.com/thienvl1395-dot/script/refs/heads/main/attack.lua"))()
-
 repeat task.wait() until game:IsLoaded() and game.Players.LocalPlayer
 
 local Players = game:GetService("Players")
@@ -38,7 +36,7 @@ _G = _G or {}
 _G.MobHeight = 12         -- Hạ độ cao xuống 12 studs để trúng Hitbox Melee
 _G.BringRange = 250       
 _G.MaxBringMobs = 15
-_G.FlySpeed = 300         -- Tốc độ bay an toàn
+_G.FlySpeed = 200         -- Giữ 200 để né Anti-cheat/Rubberband
 
 _B = false
 PosMon = nil
@@ -46,7 +44,14 @@ PosMon = nil
 local currentTween = nil
 local currentTarget = nil
 
--- 1. AUTO CHỌN PHE PIRATE
+-- 1. LOAD EXTERNAL FAST ATTACK
+task.spawn(function()
+	pcall(function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/thienvl1395-dot/script/refs/heads/main/attack.lua"))()
+	end)
+end)
+
+-- 2. AUTO CHỌN PHE PIRATE
 task.spawn(function()
 	repeat
 		task.wait(0.1)
@@ -56,7 +61,7 @@ task.spawn(function()
 	until plr.Team ~= nil and (plr.Team.Name == "Pirates" or plr.Team.Name == "Pirate")
 end)
 
--- 2. HÀM ÉP CẦM MELEE
+-- 3. HÀM ÉP CẦM MELEE
 local function ForceEquipMelee()
 	local char = plr.Character
 	if not char then return end
@@ -76,7 +81,7 @@ local function ForceEquipMelee()
 	end
 end
 
--- 3. NOCLIP + KEEP MELEE
+-- 4. NOCLIP + KEEP MELEE
 RunService.Stepped:Connect(function()
 	if plr.Character then
 		for _, part in pairs(plr.Character:GetChildren()) do
@@ -88,14 +93,14 @@ RunService.Stepped:Connect(function()
 	end
 end)
 
--- 4. ANTI AFK
+-- 5. ANTI AFK
 plr.Idled:Connect(function()
 	VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
 	task.wait(1)
 	VirtualUser:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
 end)
 
--- 5. TWEEN FLY SYSTEM
+-- 6. TWEEN FLY SYSTEM
 local function _tp(cframe)
 	if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then return end
 	local hrp = plr.Character.HumanoidRootPart
@@ -120,7 +125,7 @@ local function _tp(cframe)
 	end
 end
 
--- 6. DỮ LIỆU QUEST & FARM LOGIC
+-- 7. DỮ LIỆU QUEST & FARM LOGIC
 local QuestData = {
 	-- Sea 1
 	{ MinLvl = 1, MaxLvl = 9, Mob = "Bandit", QuestName = "BanditQuest1", QuestId = 1, NPCPos = CFrame.new(1059, 16, 1549), MobPos = CFrame.new(1145, 17, 1634) },
