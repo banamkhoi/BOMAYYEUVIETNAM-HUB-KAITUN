@@ -1,5 +1,4 @@
-loadstring(game:HttpGet("https://raw.githubusercontent.com/AnhTuanDzai-Hub/FastAttackLoL/refs/heads/main/FastAttack.lua"))()
-
+loadstring(game:HttpGet("https://raw.githubusercontent.com/thienvl1395-dot/script/refs/heads/main/attack.lua"))()
 -- Chờ game load hoàn tất
 repeat task.wait() until game:IsLoaded() and game.Players.LocalPlayer
 
